@@ -1,8 +1,13 @@
 import Image from "next/image";
+import Head from 'next/head'
 
 export const DefaultComponent = () => {
   return (
     <div className={"hello-world"}>
+      <Head>
+        <title>TestTechSC</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+      </Head>
       <Image
         src={"/images/senscritique.png"}
         alt={"logo"}

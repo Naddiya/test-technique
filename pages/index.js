@@ -1,12 +1,14 @@
-import {ApolloProvider} from "@apollo/client";
-import {AnilistClient} from "../http/AnilistClient";
-import {DefaultComponent} from "../components/DefaultComponent";
+import { ApolloProvider } from "@apollo/client";
+import { AnilistClient } from "../http/AnilistClient";
+import { DefaultComponent } from "../components/DefaultComponent";
+import { AnimeList } from "../components/AnimeList";
 
 export default function Home() {
   return (
     <ApolloProvider client={AnilistClient}>
       <div className="container">
-        <DefaultComponent/>
+        <DefaultComponent />
+        <AnimeList />
         <style jsx global>{`
         html,
         body {

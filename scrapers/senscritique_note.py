@@ -1,7 +1,10 @@
+# coding=utf8
+
 import requests as r
 import mariadb
 import json
 import os, sys
+import mariadb
 
 """
 Fonction permettant de récupérer l'URL SensCritique d'un animé

@@ -122,10 +122,12 @@ module.exports = {
           "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/nx418-aeVCp5jcGNsN.jpg"
         },
         "description": "All is well at the Tendo residence when from out of nowhere, a Chinese girl named Lychee appears, seeking revenge on Happosai for a broken promise made since her birth. Things get worse when Kirin and the Seven Lucky Gods appear and abduct Akane to take as his wife. Ranma and the gang must travel to Nekonron, China, and save Akane from getting married to Kirin.\n<br><br>\n(Source: Anime News Network)"
-      }];
+      }
+    ]
+      await queryInterface.bulkInsert("animes", animes, {}, { title : { type: new Sequelize.JSON() }, coverImage: { type: new Sequelize.JSON() } });
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete("animes", animes, {}, { title : { type: new Sequelize.JSON() }, coverImage: { type: new Sequelize.JSON() } });
+    return queryInterface.bulkDelete("animes", animes, {});
   }
 };

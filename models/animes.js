@@ -15,8 +15,9 @@ module.exports = (sequelize, DataTypes) => {
   };
   animes.init({
     title: DataTypes.JSON,
-    coverImage: DataTypes.JSON,
-    description: DataTypes.STRING
+    coverimage: DataTypes.JSON,
+    description: DataTypes.JSON,
+    rating: DataTypes.FLOAT
   }, {
     sequelize,
     modelName: 'animes',

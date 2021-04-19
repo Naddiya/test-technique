@@ -41,38 +41,49 @@ def connect_to_database():
         print(f"Error connecting to MariaDB Platform: {e}")
         sys.exit(1)
 
-
 """
 Ajouter votre logique en dessous ⬇️
 """
 print("Hello world ! 👋🏻")
 
-
+def add_rating_column_if_not_exists(cur):
+    # if column don't exist create it with float data type
+    cur.execute("ALTER TABLE animes ADD COLUMN IF NOT EXISTS rating float")
 
 def init_database():
+    # Connect to database and use cursor to search db
     conn = connect_to_database()
-    cur= conn.cursor()
-    cur.execute("UPDATE animes SET animes.rating=? WHERE animes.id=?", (anime_rating, anime_id))
-    conn.commit() 
-    
+    cur = conn.cursor()
+    return(conn, cur)
 
+def get_animes_title_and_id(cur):
+    cur.execute("SELECT JSON_EXTRACT(title, '$.romaji'), id FROM animes")
+    return cur.fetchall()
 
-# Connect to database and use cursor to search db
-conn = connect_to_database()
-cur = conn.cursor()
-# if column don't exist create it with float data type
-cur.execute("ALTER TABLE animes ADD COLUMN IF NOT EXISTS rating float")
-# get animes titles ans id
-cur.execute("SELECT JSON_EXTRACT(title, '$.romaji'), id FROM animes")
-anime_data= cur.fetchall()
+def scrap_sc_rating(anime_name):
 # loop on anime data
-for (anime) in anime_data:
-    anime_name = anime[0]
-    anime_id = anime[1]
-    rating_page = (get_sc_anime_url(anime_name))
+    rating_page = get_sc_anime_url(anime_name)
     if not rating_page:
-        continue 
-    anime_rating = float(html.fromstring(r.get(rating_page).content).xpath('//span[@class="pvi-scrating-value"]/text()')[0])
+        return None
+    return float(html.fromstring(r.get(rating_page).content).xpath('//span[@class="pvi-scrating-value"]/text()')[0])
+
+def update_sc_ratings_to_animes(cur, anime_id, anime_rating):
     cur.execute("UPDATE animes SET animes.rating=? WHERE animes.id=?", (anime_rating, anime_id))
-conn.commit()
-print(f"Last Inserted ID: {cur.lastrowid}")
+
+def main():
+    conn, cur = init_database()
+    add_rating_column_if_not_exists(cur)
+    anime_data = get_animes_title_and_id(cur)
+    for (anime) in anime_data:
+        # print(anime)
+        anime_name = anime[0]
+        anime_id = anime[1]
+        anime_rating = scrap_sc_rating(anime_name)
+
+        if anime_rating:
+            print(anime_rating)
+            update_sc_ratings_to_animes(cur, anime_id, anime_rating)
+    conn.commit()
+    print(f"Last Inserted ID: {cur.lastrowid}")
+
+main()

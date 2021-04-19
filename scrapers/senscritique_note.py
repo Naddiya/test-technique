@@ -4,7 +4,8 @@ import requests as r
 import mariadb
 import json
 import os, sys
-import mariadb
+import requests
+from lxml import html
 
 """
 Fonction permettant de récupérer l'URL SensCritique d'un animé
@@ -22,8 +23,6 @@ def get_sc_anime_url(anime_name):
         first_result = content_in_json['json'][0]['url']
 
     return first_result
-
-
 """
 Connexion à la base de données
 ⚠️ Ne pas toucher à cette fonction, elle vous sera utile.
@@ -31,11 +30,11 @@ Connexion à la base de données
 def connect_to_database():
     try:
         connection = mariadb.connect(
-            host=os.getenv("DATABASE_HOST"),
-            port=int(os.getenv("DATABASE_PORT")),
-            user=os.getenv("DATABASE_USER"),
-            password=os.getenv("DATABASE_PASSWORD"),
-            database=os.getenv("DATABASE_NAME")
+            host="172.18.0.3",
+            port=3306,
+            user="nana",
+            password="nana",
+            database="senscritique"
         )
         return connection
     except mariadb.Error as e:
@@ -47,3 +46,33 @@ def connect_to_database():
 Ajouter votre logique en dessous ⬇️
 """
 print("Hello world ! 👋🏻")
+
+
+
+def init_database():
+    conn = connect_to_database()
+    cur= conn.cursor()
+    cur.execute("UPDATE animes SET animes.rating=? WHERE animes.id=?", (anime_rating, anime_id))
+    conn.commit() 
+    
+
+
+# Connect to database and use cursor to search db
+conn = connect_to_database()
+cur = conn.cursor()
+# if column don't exist create it with float data type
+cur.execute("ALTER TABLE animes ADD COLUMN IF NOT EXISTS rating float")
+# get animes titles ans id
+cur.execute("SELECT JSON_EXTRACT(title, '$.romaji'), id FROM animes")
+anime_data= cur.fetchall()
+# loop on anime data
+for (anime) in anime_data:
+    anime_name = anime[0]
+    anime_id = anime[1]
+    rating_page = (get_sc_anime_url(anime_name))
+    if not rating_page:
+        continue 
+    anime_rating = float(html.fromstring(r.get(rating_page).content).xpath('//span[@class="pvi-scrating-value"]/text()')[0])
+    cur.execute("UPDATE animes SET animes.rating=? WHERE animes.id=?", (anime_rating, anime_id))
+conn.commit()
+print(f"Last Inserted ID: {cur.lastrowid}")

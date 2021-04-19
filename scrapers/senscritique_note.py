@@ -44,46 +44,62 @@ def connect_to_database():
 """
 Ajouter votre logique en dessous ⬇️
 """
-print("Hello world ! 👋🏻")
 
+"""
+Create rating column
+"""
 def add_rating_column_if_not_exists(cur):
     # if column don't exist create it with float data type
     cur.execute("ALTER TABLE animes ADD COLUMN IF NOT EXISTS rating float")
 
+"""
+Connect to search db
+"""
 def init_database():
     # Connect to database and use cursor to search db
     conn = connect_to_database()
     cur = conn.cursor()
     return(conn, cur)
 
+"""
+Get animes title and id
+"""
 def get_animes_title_and_id(cur):
     cur.execute("SELECT JSON_EXTRACT(title, '$.romaji'), id FROM animes")
     return cur.fetchall()
 
+""""
+Scrapp senscritique website to get anime rating
+""""
 def scrap_sc_rating(anime_name):
-# loop on anime data
     rating_page = get_sc_anime_url(anime_name)
     if not rating_page:
         return None
     return float(html.fromstring(r.get(rating_page).content).xpath('//span[@class="pvi-scrating-value"]/text()')[0])
 
+""""
+Update database with new data
+""""
 def update_sc_ratings_to_animes(cur, anime_id, anime_rating):
     cur.execute("UPDATE animes SET animes.rating=? WHERE animes.id=?", (anime_rating, anime_id))
 
+""""
+Main function to run 
+""""
 def main():
     conn, cur = init_database()
     add_rating_column_if_not_exists(cur)
     anime_data = get_animes_title_and_id(cur)
+    # Loop on anime_data
     for (anime) in anime_data:
-        # print(anime)
         anime_name = anime[0]
         anime_id = anime[1]
         anime_rating = scrap_sc_rating(anime_name)
-
         if anime_rating:
             print(anime_rating)
             update_sc_ratings_to_animes(cur, anime_id, anime_rating)
     conn.commit()
     print(f"Last Inserted ID: {cur.lastrowid}")
+
 
 main()
